@@ -1,5 +1,12 @@
+test_path = File.expand_path(File.dirname(__FILE__))
+lib_path = File.join(File.expand_path(File.dirname(__FILE__)), '..', 'lib')
+
+$:.unshift test_path unless $:.include?(test_path)
+$:.unshift lib_path unless $:.include?(lib_path)
+
 require 'test/unit'
 require 'tmpdir'
+require 'net/ftp'
 require 'munkey'
 require 'fileutils'
 
