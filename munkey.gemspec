@@ -17,5 +17,5 @@ Gem::Specification.new do |spec|
   spec.has_rdoc = true
   spec.extra_rdoc_files = [ "README.rdoc" ]
   
-  spec.add_dependency 'net_sync', '>= 0.4.0'
+  spec.add_dependency 'ftp_sync', '>= 0.4.0'
 end
