@@ -20,7 +20,8 @@ class MunkeyBin
   
   def pull(args)
     merge = args.delete('--no-merge') ? false : true
-    Munkey.new(Dir.pwd, @options).pull(merge)
+    quick = args.delete('--full-download') ? true : false
+    Munkey.new(Dir.pwd, @options).pull(:merge => merge)
   end
   
   def push(args)
@@ -33,7 +34,7 @@ class MunkeyBin
     puts
     puts "munkey clone [--quiet] [--ignore=ignoresfile] ftp://usr:pwd@host/dir [dst]"
     puts "\t- Clone from FTP source"
-    puts "munkey pull [--quiet] [--no-merge]"
+    puts "munkey pull [--quiet] [--no-merge] [--full-download]"
     puts "\t- Pull in changes from FTP source"
     puts "munkey push [--quiet]  [--dry-run]"
     puts "\t- Push your changes back to FTP source"

@@ -14,6 +14,7 @@ class MunkeyTest < Test::Unit::TestCase
   
   def setup
     Net::FTP.create_ftp_src
+    Net::FTP.listing_overrides = {}
     @gitdir = File.join Dir.tmpdir, create_tmpname
   end
   
@@ -114,11 +115,31 @@ class MunkeyTest < Test::Unit::TestCase
       munkey_commits = `git log --format=oneline munkey`.strip.split("\n").size
       master_commits = `git log --format=oneline master`.strip.split("\n").size
       FileUtils.touch File.join(Net::FTP.ftp_src, 'missing')
-      munkey.pull(false)
+      munkey.pull(:merge => false)
       assert_equal munkey_commits + 1, `git log --format=oneline munkey`.strip.split("\n").size
       assert_equal master_commits, `git log --format=oneline master`.strip.split("\n").size
     end    
   end
+  
+  def test_quick_pull_includes_changed_files
+    Net::FTP.listing_overrides['/'] = ["-rw-r--r--   1 root     other          0 #{(Time.now + 90).strftime('%b %d %H:%M')} README"]
+    munkey = Munkey.clone('ftp://user:pass@test.server/', @gitdir)
+    File.open(File.join(Net::FTP.ftp_src, 'README'), 'w') {|f| f.write 'quicktest' }
+    Dir.chdir(@gitdir) do
+      munkey.pull(:quick => true)
+      assert_equal 2, `git log --format=oneline munkey`.strip.split("\n").size
+    end
+  end
+  
+  def test_quick_pull_excludes_unmodified_files
+    Net::FTP.listing_overrides['/'] = ["-rw-r--r--   1 root     other          0 #{(Time.now - 90).strftime('%b %d %H:%M')} README"]
+    munkey = Munkey.clone('ftp://user:pass@test.server/', @gitdir)
+    File.open(File.join(Net::FTP.ftp_src, 'README'), 'w') {|f| f.write 'quicktest' }
+    Dir.chdir(@gitdir) do
+      munkey.pull(:quick => true)
+      assert_equal 1, `git log --format=oneline munkey`.strip.split("\n").size
+    end
+  end  
   
   def test_push_includes_newly_added_files
     Net::FTP.create_ftp_dst
@@ -241,6 +262,11 @@ class MunkeyTest < Test::Unit::TestCase
     add_file_to_git 'newfile'
     munkey.push(true)
     assert !File.exist?(File.join(Net::FTP.ftp_dst, 'newfile'))
+  end
+  
+  def test_last_pull_date
+    munkey = Munkey.clone('ftp://user:pass@test.server/', @gitdir)
+    assert_equal Time.now.to_s, munkey.last_pull_date.to_s
   end
   
   protected

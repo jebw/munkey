@@ -41,13 +41,16 @@ class Munkey
     @verbose = options[:verbose] || false
   end
   
-  def pull(merge = true)
+  def pull(options = {})
+    default_options = { :merge => true, :quick => false }
+    default_options.merge! options
+    
     tmp_repo = clone_to_tmp
-    pull_ftp_files(tmp_repo)
+    pull_ftp_files(tmp_repo, default_options[:quick])
     commit_changes(tmp_repo)
     push_into_base_repo(tmp_repo)
     FileUtils.rm_rf(tmp_repo)
-    merge_foreign_changes if merge
+    merge_foreign_changes if default_options[:merge]
   end
   
   def push(dryrun = false)
@@ -69,11 +72,15 @@ class Munkey
     end
   end
   
-  def pull_ftp_files(dst = nil)
+  def pull_ftp_files(dst = nil, quick = false)
+    if quick
+      since = last_pull_date
+    end
+    
     dst ||= @gitpath
     gitignore = GitignoreParser.parse(dst)
     ftp = FtpSync.new(@ftpdetails[:host], @ftpdetails[:user], @ftpdetails[:password], :ignore => gitignore, :verbose => @verbose)
-    ftp.pull_dir(dst, @ftpdetails[:path], { :delete => true }) do |p|
+    ftp.pull_dir(dst, @ftpdetails[:path], { :delete => true, :since => (since || nil) }) do |p|
       Dir.chdir(dst) do
         relpath = p.gsub %r{^#{Regexp.escape(dst)}\/}, ''
         system("git rm -r#{git_quiet} '#{relpath}'")
@@ -148,6 +155,13 @@ class Munkey
   def list_ftp_changes(changes)
     changes[:changed].each {|f| puts "WILL UPLOAD #{f}" }
     changes[:removed].each {|f| puts "WILL REMOVE #{f}" }
+  end
+  
+  def last_pull_date(branch = DEFAULT_BRANCH)
+    Dir.chdir(@gitpath) do
+      commits = `git log --format=oneline #{branch}`.strip.split("\n")
+      commits.find {|c| c =~ /^[a-f\d]{40} Pull from ftp:\/\/.* at ([\w +:]+)$/ } ? Time.parse($1) : nil      
+    end
   end
   
   private
