@@ -20,8 +20,8 @@ class MunkeyBin
   
   def pull(args)
     merge = args.delete('--no-merge') ? false : true
-    quick = args.delete('--full-download') ? true : false
-    Munkey.new(Dir.pwd, @options).pull(:merge => merge)
+    quick = args.delete('--full-download') ? false : true
+    Munkey.new(Dir.pwd, @options).pull(:merge => merge, :quick => quick)
   end
   
   def push(args)
