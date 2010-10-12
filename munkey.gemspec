@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.summary = "Tool for using git to push and pull from ftp servers"
   spec.description = "Tool for using git to push and pull from ftp servers"
   
-  spec.files = [ 'lib/gitignore_parser.rb', 'lib/munkey.rb', 'bin/munkey' ]
+  spec.files = [ 'lib/gitignore_parser.rb', 'lib/munkey.rb', 'bin/munkey', 'README.rdoc' ]
   spec.bindir = "bin"
   spec.executables = ["munkey"]
   spec.default_executable = "munkey"
@@ -16,6 +16,7 @@ Gem::Specification.new do |spec|
   spec.test_files = [ 'test/gitignore_test.rb', 'test/munkey_test.rb' ]
   spec.has_rdoc = true
   spec.extra_rdoc_files = [ "README.rdoc" ]
+  spec.rdoc_options = ["--line-numbers", "--title", spec.summary, "--main", "README.rdoc"]
   
-  spec.add_dependency 'ftp_sync', '>= 0.4.0'
+  spec.add_dependency 'ftp_sync', '>= 0.4.1'
 end
